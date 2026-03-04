@@ -1,0 +1,122 @@
+services:
+
+  # ── OnePilot API ──────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: onepilot_api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - METADATA_DB_HOST=onepilot_postgres
+      - METADATA_DB_PORT=5432
+      - REDIS_HOST=onepilot_redis
+    volumes:
+      - ./core:/app/core
+      - ./connectors:/app/connectors
+      - ./api:/app/api
+      - ./db:/app/db
+      # Option 1 : fichiers uploadés via UI
+      - uploads_data:/app/uploads
+      # Option 2 : dossier local Windows monté dans Docker
+      - C:/Users:/mnt/host/Users
+      # Option 3 : si tu as un partage réseau, monte-le ici
+      # - //serveur/partage:/mnt/network/serveur/partage
+    command: >
+      uvicorn api.main:app
+        --host 0.0.0.0 --port 8000 --reload
+        --log-level info
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - onepilot_net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # ── UI (serveur statique) ─────────────────────────────────
+  ui:
+    image: nginx:alpine
+    container_name: onepilot_ui
+    ports:
+      - "3000:80"
+    volumes:
+      - ./ui:/usr/share/nginx/html:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - api
+    networks:
+      - onepilot_net
+    restart: unless-stopped
+
+  # ── PostgreSQL (metadata store) ───────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: onepilot_postgres
+    environment:
+      POSTGRES_USER:     ${POSTGRES_USER:-onepilot}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-onepilot_secret}
+      POSTGRES_DB:       ${POSTGRES_DB:-onepilot_dev}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/migrations/001_init.sql:/docker-entrypoint-initdb.d/001_init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-onepilot}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - onepilot_net
+    restart: unless-stopped
+
+  # ── Redis (cache) ─────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: onepilot_redis
+    command: redis-server --save 60 1 --loglevel warning
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - onepilot_net
+    restart: unless-stopped
+
+  # ── Adminer (DB browser) ──────────────────────────────────
+  adminer:
+    image: adminer:4
+    container_name: onepilot_adminer
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    networks:
+      - onepilot_net
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  uploads_data:
+
+networks:
+  onepilot_net:
+    driver: bridge

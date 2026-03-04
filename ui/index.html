@@ -1,0 +1,1632 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OnePilot — Connection Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-0:      #080c10;
+  --bg-1:      #0d1218;
+  --bg-2:      #111820;
+  --bg-3:      #171f2a;
+  --bg-4:      #1e2837;
+  --border:    #1f2d3d;
+  --border-hi: #2a3f57;
+  --text-0:    #e8edf2;
+  --text-1:    #9aafbf;
+  --text-2:    #5c7a8a;
+  --text-3:    #3d5566;
+  --accent:    #00d4ff;
+  --accent-dim:#0099bb;
+  --accent-glow: rgba(0,212,255,0.15);
+  --green:     #00e698;
+  --green-dim: #00a86b;
+  --orange:    #ff8c42;
+  --red:       #ff4d6a;
+  --yellow:    #ffd166;
+  --purple:    #a78bfa;
+  --font-mono: "IBM Plex Mono", monospace;
+  --font-sans: "IBM Plex Sans", sans-serif;
+  --radius:    6px;
+  --shadow:    0 8px 32px rgba(0,0,0,0.6);
+}
+
+/* ── LIGHT THEME ── */
+html.light {
+  --bg-0:      #f0f4f8;
+  --bg-1:      #ffffff;
+  --bg-2:      #f5f8fa;
+  --bg-3:      #e8eef4;
+  --bg-4:      #dde6ef;
+  --border:    #d0dbe6;
+  --border-hi: #b0c4d8;
+  --text-0:    #0f1923;
+  --text-1:    #2d4a5e;
+  --text-2:    #5c7a8a;
+  --text-3:    #8aacbf;
+  --accent:    #007acc;
+  --accent-dim:#005fa3;
+  --accent-glow: rgba(0,122,204,0.12);
+  --green:     #00875a;
+  --green-dim: #006644;
+  --orange:    #c95f00;
+  --red:       #d93025;
+  --yellow:    #b36200;
+  --purple:    #6b48c8;
+  --shadow:    0 8px 32px rgba(0,0,0,0.12);
+}
+
+/* ── THEME TOGGLE ── */
+.theme-toggle {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 10px;
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-2);
+  transition: all 0.2s;
+  user-select: none;
+}
+.theme-toggle:hover { background: var(--bg-4); border-color: var(--border-hi); color: var(--text-0); }
+.tt-track {
+  width: 30px; height: 17px;
+  background: var(--border-hi);
+  border-radius: 9px;
+  position: relative;
+  transition: background 0.25s;
+  flex-shrink: 0;
+}
+html.light .tt-track { background: var(--accent); }
+.tt-thumb {
+  width: 11px; height: 11px;
+  background: #fff;
+  border-radius: 50%;
+  position: absolute;
+  top: 3px; left: 3px;
+  transition: transform 0.25s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}
+html.light .tt-thumb { transform: translateX(13px); }
+
+/* ── LIGHT THEME ── */
+html.light {
+  --bg-0:      #f0f4f8;
+  --bg-1:      #ffffff;
+  --bg-2:      #f5f8fa;
+  --bg-3:      #e8eef4;
+  --bg-4:      #dde6ef;
+  --border:    #d0dbe6;
+  --border-hi: #b0c4d8;
+  --text-0:    #0f1923;
+  --text-1:    #2d4a5e;
+  --text-2:    #5c7a8a;
+  --text-3:    #8aacbf;
+  --accent:    #007acc;
+  --accent-dim:#005fa3;
+  --accent-glow: rgba(0,122,204,0.12);
+  --green:     #00875a;
+  --green-dim: #006644;
+  --orange:    #c95f00;
+  --red:       #d93025;
+  --yellow:    #b36200;
+  --purple:    #6b48c8;
+  --shadow:    0 8px 32px rgba(0,0,0,0.12);
+}
+
+/* ── THEME TOGGLE ── */
+.theme-toggle {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 10px;
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-2);
+  transition: all 0.2s;
+  user-select: none;
+}
+.theme-toggle:hover { background: var(--bg-4); border-color: var(--border-hi); color: var(--text-0); }
+.tt-track {
+  width: 30px; height: 17px;
+  background: var(--border-hi);
+  border-radius: 9px;
+  position: relative;
+  transition: background 0.25s;
+  flex-shrink: 0;
+}
+html.light .tt-track { background: var(--accent); }
+.tt-thumb {
+  width: 11px; height: 11px;
+  background: #fff;
+  border-radius: 50%;
+  position: absolute;
+  top: 3px; left: 3px;
+  transition: transform 0.25s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}
+html.light .tt-thumb { transform: translateX(13px); }
+
+html, body {
+  height: 100%;
+  background: var(--bg-0);
+  color: var(--text-0);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow: hidden;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  grid-template-rows: 52px 1fr;
+  height: 100vh;
+  grid-template-areas:
+    "header header"
+    "sidebar main";
+}
+
+.header {
+  grid-area: header;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  background: var(--bg-1);
+  border-bottom: 1px solid var(--border);
+  gap: 16px;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-0);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.logo-icon {
+  width: 28px; height: 28px;
+  background: var(--accent);
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  color: var(--bg-0);
+  font-weight: 700;
+}
+.logo-sep { color: var(--text-3); font-weight: 300; margin: 0 4px; }
+.logo-sub { color: var(--text-2); font-size: 11px; font-weight: 400; letter-spacing: 0.1em; }
+.header-spacer { flex: 1; }
+.header-pill {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 12px;
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-2);
+}
+.dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+.sidebar {
+  grid-area: sidebar;
+  background: var(--bg-1);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.sidebar-section {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.sidebar-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: 8px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  color: var(--text-1);
+  font-size: 13px;
+  transition: all 0.15s;
+  border: 1px solid transparent;
+}
+.nav-item:hover { background: var(--bg-3); color: var(--text-0); }
+.nav-item.active {
+  background: var(--accent-glow);
+  border-color: rgba(0,212,255,0.2);
+  color: var(--accent);
+}
+.nav-icon { font-size: 15px; width: 20px; text-align: center; }
+.nav-count {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-3);
+  background: var(--bg-3);
+  padding: 1px 7px;
+  border-radius: 10px;
+}
+.sidebar-sources {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+.sidebar-sources::-webkit-scrollbar { width: 4px; }
+.sidebar-sources::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px; }
+.source-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s;
+  margin-bottom: 2px;
+}
+.source-item:hover { background: var(--bg-3); border-color: var(--border); }
+.source-item.selected { background: var(--bg-3); border-color: var(--border-hi); }
+.source-type-icon {
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.type-db { background: rgba(0,230,152,0.1); border: 1px solid rgba(0,230,152,0.2); }
+.type-ws { background: rgba(0,212,255,0.1); border: 1px solid rgba(0,212,255,0.2); }
+.type-file { background: rgba(255,140,66,0.1); border: 1px solid rgba(255,140,66,0.2); }
+.source-info { flex: 1; min-width: 0; }
+.source-name { font-size: 12px; font-weight: 500; color: var(--text-0); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.source-sub { font-size: 11px; color: var(--text-2); font-family: var(--font-mono); }
+.status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.status-active  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.status-error   { background: var(--red); }
+.status-pending { background: var(--text-3); }
+.status-disabled{ background: var(--text-3); opacity: 0.4; }
+
+.main {
+  grid-area: main;
+  overflow-y: auto;
+  background: var(--bg-0);
+}
+.main::-webkit-scrollbar { width: 6px; }
+.main::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+.view { display: none; animation: fadeIn 0.2s ease; }
+.view.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+.page-header {
+  display: flex; align-items: center;
+  padding: 24px 28px 0;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.page-title { font-size: 20px; font-weight: 600; color: var(--text-0); }
+.page-subtitle { font-size: 13px; color: var(--text-2); margin-top: 2px; }
+.page-header-actions { margin-left: auto; display: flex; gap: 8px; }
+
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin: 0 28px 24px; }
+.stat-block { background: var(--bg-1); padding: 20px 24px; }
+.stat-value { font-family: var(--font-mono); font-size: 28px; font-weight: 600; color: var(--text-0); }
+.stat-value.accent { color: var(--accent); }
+.stat-value.green  { color: var(--green); }
+.stat-value.orange { color: var(--orange); }
+.stat-value.red    { color: var(--red); }
+.stat-label { font-size: 12px; color: var(--text-2); margin-top: 4px; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  font-family: var(--font-sans); font-size: 13px; font-weight: 500;
+  cursor: pointer; border: none; transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn-primary { background: var(--accent); color: var(--bg-0); }
+.btn-primary:hover { background: #1ae0ff; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,212,255,0.3); }
+.btn-secondary { background: var(--bg-3); color: var(--text-0); border: 1px solid var(--border-hi); }
+.btn-secondary:hover { background: var(--bg-4); border-color: var(--text-3); }
+.btn-ghost { background: transparent; color: var(--text-1); border: 1px solid var(--border); }
+.btn-ghost:hover { background: var(--bg-3); color: var(--text-0); }
+.btn-danger { background: rgba(255,77,106,0.1); color: var(--red); border: 1px solid rgba(255,77,106,0.3); }
+.btn-danger:hover { background: rgba(255,77,106,0.2); }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+.btn-icon { padding: 7px; border-radius: var(--radius); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+
+.source-table-wrap { padding: 0 28px 28px; }
+.source-table { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--bg-1); }
+.source-table table { width: 100%; border-collapse: collapse; }
+.source-table th { padding: 12px 16px; text-align: left; font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); background: var(--bg-2); border-bottom: 1px solid var(--border); }
+.source-table td { padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.source-table tr:last-child td { border-bottom: none; }
+.source-table tr:hover td { background: var(--bg-2); }
+.source-table tr { cursor: pointer; transition: background 0.1s; }
+
+.badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 4px; font-family: var(--font-mono); font-size: 11px; font-weight: 500; }
+.badge-db   { background: rgba(0,230,152,0.1); color: var(--green); border: 1px solid rgba(0,230,152,0.2); }
+.badge-ws   { background: rgba(0,212,255,0.1); color: var(--accent); border: 1px solid rgba(0,212,255,0.2); }
+.badge-file { background: rgba(255,140,66,0.1); color: var(--orange); border: 1px solid rgba(255,140,66,0.2); }
+
+.status-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 12px; font-size: 11px; font-weight: 500; }
+.sb-active   { background: rgba(0,230,152,0.1); color: var(--green); }
+.sb-error    { background: rgba(255,77,106,0.1); color: var(--red); }
+.sb-pending  { background: rgba(92,122,138,0.15); color: var(--text-2); }
+.sb-disabled { background: var(--bg-3); color: var(--text-3); }
+
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.2s;
+}
+.overlay.open { opacity: 1; pointer-events: all; }
+.modal {
+  background: var(--bg-1);
+  border: 1px solid var(--border-hi);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  width: 640px;
+  max-height: 88vh;
+  overflow-y: auto;
+  transform: translateY(20px) scale(0.97);
+  transition: transform 0.2s;
+}
+.overlay.open .modal { transform: none; }
+.modal::-webkit-scrollbar { width: 4px; }
+.modal::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.modal-header {
+  display: flex; align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+  position: sticky; top: 0;
+  background: var(--bg-1);
+  z-index: 1;
+}
+.modal-title { font-size: 16px; font-weight: 600; color: var(--text-0); }
+.modal-step-indicator { margin-left: auto; font-family: var(--font-mono); font-size: 12px; color: var(--text-2); }
+.modal-body { padding: 24px; }
+.modal-footer {
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: 8px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  position: sticky; bottom: 0;
+  background: var(--bg-1);
+}
+
+.wizard-steps { display: flex; align-items: center; gap: 0; margin-bottom: 28px; }
+.wstep { display: flex; align-items: center; gap: 8px; flex: 1; position: relative; }
+.wstep::after { content: ''; flex: 1; height: 1px; background: var(--border); margin: 0 8px; }
+.wstep:last-child::after { display: none; }
+.wstep-num { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 12px; font-weight: 600; border: 2px solid var(--border); color: var(--text-3); flex-shrink: 0; transition: all 0.2s; }
+.wstep-label { font-size: 12px; color: var(--text-3); white-space: nowrap; }
+.wstep.done .wstep-num   { background: var(--green); border-color: var(--green); color: var(--bg-0); }
+.wstep.active .wstep-num { background: var(--accent); border-color: var(--accent); color: var(--bg-0); }
+.wstep.active .wstep-label { color: var(--text-0); }
+
+.cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+.cat-card { padding: 20px 16px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; text-align: center; transition: all 0.15s; background: var(--bg-2); }
+.cat-card:hover { border-color: var(--border-hi); background: var(--bg-3); }
+.cat-card.selected { border-color: var(--accent); background: var(--accent-glow); }
+.cat-icon { font-size: 28px; margin-bottom: 8px; }
+.cat-name { font-weight: 600; font-size: 13px; color: var(--text-0); }
+.cat-desc { font-size: 11px; color: var(--text-2); margin-top: 4px; }
+
+.type-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 24px; }
+.type-pill { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: all 0.15s; background: var(--bg-2); }
+.type-pill:hover { border-color: var(--border-hi); background: var(--bg-3); }
+.type-pill.selected { border-color: var(--accent); background: var(--accent-glow); }
+.type-emoji { font-size: 18px; }
+.type-name { font-size: 13px; font-weight: 500; color: var(--text-0); }
+.type-port { font-family: var(--font-mono); font-size: 11px; color: var(--text-3); margin-left: auto; }
+
+.form-section { margin-bottom: 24px; }
+.form-section-title { font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-3); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-group { margin-bottom: 14px; }
+.form-label { display: block; font-size: 12px; font-weight: 500; color: var(--text-1); margin-bottom: 6px; }
+.form-label .required { color: var(--accent); margin-left: 2px; }
+.form-input, .form-select {
+  width: 100%;
+  padding: 9px 12px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-0);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  transition: border-color 0.15s;
+  outline: none;
+}
+.form-input:focus, .form-select:focus { border-color: var(--accent); }
+.form-input::placeholder { color: var(--text-3); }
+.form-select option { background: var(--bg-2); }
+.form-hint { font-size: 11px; color: var(--text-3); margin-top: 5px; }
+.form-input.mono { font-family: var(--font-mono); font-size: 12px; }
+
+/* File upload zone */
+.upload-zone {
+  border: 2px dashed var(--border-hi);
+  border-radius: var(--radius);
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--bg-2);
+}
+.upload-zone:hover { border-color: var(--accent); background: var(--accent-glow); }
+.upload-zone input[type=file] { display: none; }
+.upload-zone-icon { font-size: 32px; margin-bottom: 8px; }
+.upload-zone-text { font-size: 13px; color: var(--text-1); }
+.upload-zone-hint { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+.upload-progress {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--bg-3);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  font-size: 12px;
+}
+
+.test-box { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-top: 16px; }
+.test-header { display: flex; align-items: center; gap: 10px; padding: 14px 16px; background: var(--bg-2); border-bottom: 1px solid var(--border); }
+.test-title { font-weight: 500; font-size: 13px; }
+.test-status { margin-left: auto; font-family: var(--font-mono); font-size: 12px; }
+.ts-ok  { color: var(--green); }
+.ts-err { color: var(--red); }
+.ts-loading { color: var(--accent); }
+.test-body { padding: 14px 16px; }
+.test-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.test-row:last-child { margin-bottom: 0; }
+.test-row-label { font-size: 12px; color: var(--text-2); width: 100px; flex-shrink: 0; }
+.test-row-value { font-family: var(--font-mono); font-size: 12px; color: var(--text-0); }
+.latency-bar { height: 4px; background: var(--bg-3); border-radius: 2px; width: 120px; overflow: hidden; margin-left: 8px; }
+.latency-fill { height: 100%; border-radius: 2px; transition: width 0.5s; }
+.latency-good { background: var(--green); }
+.latency-ok   { background: var(--yellow); }
+.latency-slow { background: var(--red); }
+
+.entity-grid { padding: 0 28px 28px; }
+.entity-card { background: var(--bg-1); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 8px; overflow: hidden; transition: border-color 0.15s; }
+.entity-card:hover { border-color: var(--border-hi); }
+.entity-header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; cursor: pointer; }
+.entity-icon { width: 32px; height: 32px; background: var(--bg-3); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+.entity-name { font-weight: 500; font-size: 14px; color: var(--text-0); }
+.entity-meta { font-size: 11px; color: var(--text-2); margin-top: 2px; font-family: var(--font-mono); }
+.entity-toggle { margin-left: auto; color: var(--text-3); transition: transform 0.2s; }
+.entity-toggle.open { transform: rotate(90deg); }
+.field-table { width: 100%; border-collapse: collapse; }
+.field-table th { padding: 8px 16px; text-align: left; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); background: var(--bg-0); border-top: 1px solid var(--border); }
+.field-table td { padding: 8px 16px; font-size: 12px; border-top: 1px solid var(--border); color: var(--text-1); }
+.field-name { font-family: var(--font-mono); color: var(--text-0); }
+.field-type { font-family: var(--font-mono); color: var(--purple); font-size: 11px; }
+.field-native { font-family: var(--font-mono); color: var(--text-3); font-size: 11px; }
+.key-badge { display: inline-flex; align-items: center; padding: 1px 6px; border-radius: 3px; font-size: 10px; font-family: var(--font-mono); font-weight: 600; }
+.pk-badge { background: rgba(255,209,102,0.15); color: var(--yellow); }
+.fk-badge { background: rgba(167,139,250,0.15); color: var(--purple); }
+
+.toast-area { position: fixed; bottom: 24px; right: 24px; z-index: 200; display: flex; flex-direction: column; gap: 8px; }
+.toast { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: var(--bg-3); border: 1px solid var(--border-hi); border-radius: var(--radius); box-shadow: var(--shadow); font-size: 13px; min-width: 280px; animation: slideIn 0.25s ease; transition: opacity 0.3s; }
+.toast.out { opacity: 0; }
+@keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: none; opacity: 1; } }
+.toast-icon { font-size: 16px; }
+.toast-success { border-left: 3px solid var(--green); }
+.toast-error   { border-left: 3px solid var(--red); }
+.toast-info    { border-left: 3px solid var(--accent); }
+
+.empty-state { text-align: center; padding: 60px 24px; color: var(--text-2); }
+.empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+.empty-title { font-size: 16px; font-weight: 500; color: var(--text-1); margin-bottom: 8px; }
+.empty-desc { font-size: 13px; }
+
+.spinner { width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.detail-header { display: flex; align-items: flex-start; padding: 24px 28px; gap: 16px; border-bottom: 1px solid var(--border); background: var(--bg-1); margin-bottom: 24px; }
+.detail-icon { width: 52px; height: 52px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; background: var(--bg-3); border: 1px solid var(--border); }
+.detail-name { font-size: 20px; font-weight: 600; color: var(--text-0); }
+.detail-type { font-family: var(--font-mono); font-size: 12px; color: var(--text-2); margin-top: 4px; }
+.detail-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+
+.info-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--radius); margin: 0 28px 24px; overflow: hidden; }
+.info-cell { background: var(--bg-1); padding: 14px 16px; }
+.info-label { font-size: 11px; color: var(--text-3); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; }
+.info-value { font-size: 13px; color: var(--text-0); margin-top: 4px; font-weight: 500; }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="logo">
+      <div class="logo-icon">OP</div>
+      <span>One<span class="logo-sep">/</span>Pilot</span>
+      <span class="logo-sub">v1.0</span>
+    </div>
+    <div class="header-spacer"></div>
+    <div class="header-pill" id="apiStatus">
+      <div class="dot"></div>
+      <span>API: connecting...</span>
+    </div>
+    <div class="theme-toggle" onclick="toggleTheme()" title="Changer le thème">
+      <span id="themeIcon">🌙</span>
+      <div class="tt-track"><div class="tt-thumb"></div></div>
+      <span id="themeLabel">Dark</span>
+    </div>
+  </header>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Navigation</div>
+      <div class="nav-item active" onclick="showView('overview')" data-view="overview">
+        <span class="nav-icon">◈</span> Vue d'ensemble
+        <span class="nav-count" id="navTotal">–</span>
+      </div>
+      <div class="nav-item" onclick="showView('sources')" data-view="sources">
+        <span class="nav-icon">⎔</span> Sources
+        <span class="nav-count" id="navSources">–</span>
+      </div>
+    </div>
+    <div class="sidebar-section" style="border-bottom:none; padding-bottom:8px;">
+      <div class="sidebar-label">Connexions récentes</div>
+    </div>
+    <div class="sidebar-sources" id="sidebarSources">
+      <div class="empty-state" style="padding:20px 12px; font-size:12px;">Aucune source</div>
+    </div>
+    <div style="padding:12px; border-top:1px solid var(--border);">
+      <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="openAddModal()">
+        <span>＋</span> Nouvelle source
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- OVERVIEW -->
+    <div class="view active" id="view-overview">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Vue d'ensemble</div>
+          <div class="page-subtitle">Toutes vos sources de données connectées</div>
+        </div>
+        <div class="page-header-actions">
+          <button class="btn btn-secondary btn-sm" onclick="refreshAll()"><span>↻</span> Actualiser</button>
+          <button class="btn btn-primary btn-sm" onclick="openAddModal()"><span>＋</span> Ajouter une source</button>
+        </div>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-block"><div class="stat-value accent" id="statTotal">–</div><div class="stat-label">Sources totales</div></div>
+        <div class="stat-block"><div class="stat-value green" id="statActive">–</div><div class="stat-label">Actives</div></div>
+        <div class="stat-block"><div class="stat-value" id="statEntities">–</div><div class="stat-label">Entités indexées</div></div>
+        <div class="stat-block"><div class="stat-value orange" id="statError">–</div><div class="stat-label">En erreur</div></div>
+      </div>
+      <div class="source-table-wrap">
+        <div class="source-table" id="sourceTable">
+          <div class="empty-state" style="padding:40px;">
+            <div class="spinner" style="margin:0 auto 12px;"></div>
+            <div>Chargement...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SOURCES -->
+    <div class="view" id="view-sources">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Sources de données</div>
+          <div class="page-subtitle">Gérer toutes les connexions</div>
+        </div>
+        <div class="page-header-actions">
+          <button class="btn btn-primary btn-sm" onclick="openAddModal()"><span>＋</span> Ajouter</button>
+        </div>
+      </div>
+      <div style="padding: 0 28px 28px;">
+        <div style="display:flex; gap:8px; margin-bottom:16px;">
+          <input type="text" class="form-input" placeholder="🔍 Rechercher..." id="searchInput" style="max-width:300px;" oninput="filterSources()">
+          <select class="form-select" id="filterCategory" style="width:160px;" onchange="filterSources()">
+            <option value="">Toutes catégories</option>
+            <option value="database">Base de données</option>
+            <option value="webservice">Web Service</option>
+            <option value="file">Fichiers</option>
+          </select>
+          <select class="form-select" id="filterStatus" style="width:140px;" onchange="filterSources()">
+            <option value="">Tous statuts</option>
+            <option value="active">Actif</option>
+            <option value="error">Erreur</option>
+            <option value="pending">En attente</option>
+          </select>
+        </div>
+        <div class="source-table" id="sourceTable2">
+          <div class="empty-state"><div class="spinner" style="margin:0 auto 12px;"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DETAIL -->
+    <div class="view" id="view-detail">
+      <div id="detailContent"></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="addOverlay" onclick="closeOnBg(event, 'addOverlay')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span style="font-size:18px;">🔌</span>
+      <span class="modal-title">Ajouter une source de données</span>
+      <span class="modal-step-indicator" id="stepIndicator">Étape 1 / 3</span>
+      <button class="btn btn-ghost btn-sm btn-icon" onclick="closeModal('addOverlay')" style="margin-left:8px;">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="wizard-steps" id="wizardSteps">
+        <div class="wstep active" id="ws1"><div class="wstep-num">1</div><div class="wstep-label">Catégorie</div></div>
+        <div class="wstep" id="ws2"><div class="wstep-num">2</div><div class="wstep-label">Configuration</div></div>
+        <div class="wstep" id="ws3"><div class="wstep-num">3</div><div class="wstep-label">Test & Validation</div></div>
+      </div>
+
+      <!-- STEP 1 -->
+      <div id="step1">
+        <div style="font-size:13px; color:var(--text-2); margin-bottom:16px;">Sélectionnez le type de connexion :</div>
+        <div class="cat-grid">
+          <div class="cat-card" onclick="selectCategory('database')" id="cat-database">
+            <div class="cat-icon">🗄️</div>
+            <div class="cat-name">Base de données</div>
+            <div class="cat-desc">Connexion directe SQL</div>
+          </div>
+          <div class="cat-card" onclick="selectCategory('webservice')" id="cat-webservice">
+            <div class="cat-icon">🌐</div>
+            <div class="cat-name">Web Service</div>
+            <div class="cat-desc">REST, OData, SOAP, SAP</div>
+          </div>
+          <div class="cat-card" onclick="selectCategory('file')" id="cat-file">
+            <div class="cat-icon">📁</div>
+            <div class="cat-name">Fichiers</div>
+            <div class="cat-desc">CSV, Excel, JSON</div>
+          </div>
+        </div>
+        <div id="typeGrid" style="display:none;">
+          <div style="font-size:12px; color:var(--text-2); margin-bottom:10px; font-family:var(--font-mono); text-transform:uppercase; letter-spacing:0.1em;">Choisir le connecteur :</div>
+          <div class="type-grid" id="typeGridInner"></div>
+        </div>
+      </div>
+
+      <!-- STEP 2 -->
+      <div id="step2" style="display:none;">
+        <div id="formContent"></div>
+      </div>
+
+      <!-- STEP 3 -->
+      <div id="step3" style="display:none;">
+        <div style="text-align:center; padding:16px 0 24px;">
+          <div style="font-size:40px; margin-bottom:12px;" id="testIcon">🔄</div>
+          <div style="font-size:15px; font-weight:500; color:var(--text-0);" id="testMsg">Prêt à tester la connexion</div>
+          <div style="font-size:12px; color:var(--text-2); margin-top:6px;" id="testSub"></div>
+        </div>
+        <div class="test-box" id="testResultBox" style="display:none;">
+          <div class="test-header">
+            <span style="font-size:14px;">📊</span>
+            <span class="test-title">Résultats du test</span>
+            <span class="test-status" id="testStatusLabel">–</span>
+          </div>
+          <div class="test-body" id="testResultBody"></div>
+        </div>
+        <div id="entityPreview" style="margin-top:16px; display:none;">
+          <div style="font-family:var(--font-mono); font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-3); margin-bottom:8px;">Entités détectées</div>
+          <div id="entityPreviewList"></div>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('addOverlay')" id="cancelBtn">Annuler</button>
+      <button class="btn btn-secondary" id="prevBtn" onclick="wizardPrev()" style="display:none;">← Retour</button>
+      <button class="btn btn-primary" id="nextBtn" onclick="wizardNext()" disabled>Suivant →</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-area" id="toastArea"></div>
+
+<script>
+const API = 'http://localhost:8000';
+let allSources = [];
+let connectorTypes = {};
+let wizardStep = 1;
+let selectedCategory = null;
+let selectedType = null;
+let createdSourceId = null;
+let formData = {};
+let uploadedFilePath = null;
+
+function toast(msg, type='info') {
+  const area = document.getElementById('toastArea');
+  const t = document.createElement('div');
+  const icons = {info:'ℹ️', success:'✅', error:'❌'};
+  t.className = `toast toast-${type}`;
+  t.innerHTML = `<span class="toast-icon">${icons[type]||'ℹ️'}</span><span>${msg}</span>`;
+  area.appendChild(t);
+  setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 300); }, 3500);
+}
+
+async function apiFetch(path, opts={}) {
+  const r = await fetch(`${API}${path}`, {
+    headers: {'Content-Type':'application/json'},
+    ...opts
+  });
+  if (!r.ok) {
+    const e = await r.json().catch(()=>({detail: r.statusText}));
+    throw new Error(e.detail || r.statusText);
+  }
+  if (r.status === 204) return null;
+  return r.json();
+}
+
+function getCategoryIcon(type) {
+  const icons = {
+    postgresql:'🐘', mysql:'🐬', mssql:'🪟', sqlite:'📁',
+    rest:'🔗', odata:'⚡', graphql:'◈', soap:'📮', sap_rfc:'🔷',
+    file_csv:'📄', file_excel:'📊', file_json:'📋'
+  };
+  return icons[type] || '🔌';
+}
+function getCategoryBadge(cat) {
+  const map = {database:'db', webservice:'ws', file:'file'};
+  const label = {database:'DB', webservice:'WS', file:'File'};
+  return `<span class="badge badge-${map[cat]||'db'}">${label[cat]||cat}</span>`;
+}
+function getStatusBadge(s) {
+  const map = {active:'✓ Actif', error:'✗ Erreur', pending:'○ En attente', disabled:'⊘ Désactivé'};
+  return `<span class="status-badge sb-${s}">${map[s]||s}</span>`;
+}
+
+function showView(v) {
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById(`view-${v}`).classList.add('active');
+  document.querySelector(`[data-view="${v}"]`)?.classList.add('active');
+  if (v === 'sources') renderSourceTable2();
+}
+
+async function checkApiHealth() {
+  try {
+    const h = await apiFetch('/health');
+    const pill = document.getElementById('apiStatus');
+    const ok = h.status === 'healthy';
+    pill.innerHTML = `<div class="dot" style="background:${ok?'var(--green)':'var(--orange)'}"></div>
+      <span>API: ${ok ? 'OK' : 'Dégradé'} · PG: ${h.checks?.postgres||'?'} · Redis: ${h.checks?.redis||'?'}</span>`;
+  } catch(e) {
+    document.getElementById('apiStatus').innerHTML =
+      `<div class="dot" style="background:var(--red)"></div><span>API: Hors ligne</span>`;
+  }
+}
+
+async function loadSources() {
+  try {
+    const data = await apiFetch('/sources');
+    allSources = data.sources || [];
+    updateStats();
+    renderSourceTable();
+    renderSidebar();
+    document.getElementById('navSources').textContent = allSources.length;
+    document.getElementById('navTotal').textContent = allSources.length;
+  } catch(e) {
+    document.getElementById('sourceTable').innerHTML =
+      `<div class="empty-state"><div class="empty-icon">⚠️</div>
+       <div class="empty-title">API non disponible</div>
+       <div class="empty-desc">${e.message}</div></div>`;
+  }
+}
+
+async function loadConnectorTypes() {
+  try {
+    connectorTypes = await apiFetch('/connector-types');
+  } catch(e) {
+    connectorTypes = {
+      database: { label:'Base de données', types:[
+        {id:'postgresql',label:'PostgreSQL',icon:'🐘',default_port:5432},
+        {id:'mysql',label:'MySQL',icon:'🐬',default_port:3306},
+        {id:'mssql',label:'SQL Server',icon:'🪟',default_port:1433},
+        {id:'sqlite',label:'SQLite',icon:'📁',default_port:null},
+      ]},
+      webservice: { label:'Web Service', types:[
+        {id:'rest',label:'REST API',icon:'🔗',default_port:null},
+        {id:'odata',label:'OData',icon:'⚡',default_port:null},
+        {id:'sap_rfc',label:'SAP RFC',icon:'🔷',default_port:3300},
+      ]},
+      file: { label:'Fichiers', types:[
+        {id:'file_csv',label:'CSV',icon:'📄',default_port:null},
+        {id:'file_excel',label:'Excel',icon:'📊',default_port:null},
+        {id:'file_json',label:'JSON',icon:'📋',default_port:null},
+      ]}
+    };
+  }
+}
+
+function updateStats() {
+  document.getElementById('statTotal').textContent = allSources.length;
+  document.getElementById('statActive').textContent = allSources.filter(s=>s.status==='active').length;
+  document.getElementById('statError').textContent = allSources.filter(s=>s.status==='error').length;
+  document.getElementById('statEntities').textContent = allSources.reduce((a,s)=>a+(s.entity_count||0),0);
+}
+
+function renderSourceTable(sources = allSources) {
+  const el = document.getElementById('sourceTable');
+  if (!sources.length) {
+    el.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">🔌</div>
+      <div class="empty-title">Aucune source configurée</div>
+      <div class="empty-desc">Cliquez sur "Ajouter une source" pour commencer</div>
+    </div>`;
+    return;
+  }
+  el.innerHTML = `<table>
+    <thead><tr>
+      <th>Source</th><th>Type</th><th>Statut</th>
+      <th>Entités</th><th>Latence</th><th>Actions</th>
+    </tr></thead>
+    <tbody>
+    ${sources.map(s=>`
+      <tr onclick="showSourceDetail('${s.id}')">
+        <td>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:20px;">${getCategoryIcon(s.connector_type)}</span>
+            <div>
+              <div style="font-weight:500;color:var(--text-0)">${s.name}</div>
+              <div style="font-size:11px;color:var(--text-3);font-family:var(--font-mono)">
+                ${s.host||s.base_url||'—'}${s.port?':'+s.port:''}
+              </div>
+            </div>
+          </div>
+        </td>
+        <td>${getCategoryBadge(s.category)}</td>
+        <td>${getStatusBadge(s.status)}</td>
+        <td><span style="font-family:var(--font-mono);font-size:13px;">${s.entity_count||0}</span></td>
+        <td>${s.test_latency_ms!=null
+          ? `<span style="font-family:var(--font-mono);font-size:12px;color:${s.test_latency_ms<100?'var(--green)':s.test_latency_ms<500?'var(--yellow)':'var(--red)'}">
+              ${s.test_latency_ms}ms</span>`
+          : '<span style="color:var(--text-3)">—</span>'}</td>
+        <td onclick="event.stopPropagation()">
+          <div style="display:flex;gap:4px;">
+            <button class="btn btn-secondary btn-sm" onclick="testSourceById('${s.id}')">⚡ Test</button>
+            <button class="btn btn-secondary btn-sm" onclick="syncSource('${s.id}')">↻ Sync</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteSource('${s.id}')">✕</button>
+          </div>
+        </td>
+      </tr>
+    `).join('')}
+    </tbody></table>`;
+}
+
+function renderSourceTable2() {
+  const el = document.getElementById('sourceTable2');
+  if (el) el.innerHTML = document.getElementById('sourceTable')?.innerHTML || '';
+}
+
+function renderSidebar() {
+  const el = document.getElementById('sidebarSources');
+  if (!allSources.length) {
+    el.innerHTML = `<div style="padding:16px 8px;text-align:center;font-size:12px;color:var(--text-3)">Aucune source</div>`;
+    return;
+  }
+  el.innerHTML = allSources.slice(0,12).map(s=>`
+    <div class="source-item" onclick="showSourceDetail('${s.id}')">
+      <div class="source-type-icon type-${s.category==='database'?'db':s.category==='webservice'?'ws':'file'}">
+        ${getCategoryIcon(s.connector_type)}
+      </div>
+      <div class="source-info">
+        <div class="source-name">${s.name}</div>
+        <div class="source-sub">${s.connector_type}</div>
+      </div>
+      <div class="status-dot status-${s.status}"></div>
+    </div>
+  `).join('');
+}
+
+function filterSources() {
+  const q = document.getElementById('searchInput')?.value.toLowerCase() || '';
+  const cat = document.getElementById('filterCategory')?.value || '';
+  const sta = document.getElementById('filterStatus')?.value || '';
+  const filtered = allSources.filter(s =>
+    (!q || s.name.toLowerCase().includes(q) || (s.description||'').toLowerCase().includes(q)) &&
+    (!cat || s.category === cat) &&
+    (!sta || s.status === sta)
+  );
+  const el = document.getElementById('sourceTable2');
+  if (el) {
+    const tmp = document.createElement('div');
+    tmp.className = 'source-table';
+    document.body.appendChild(tmp);
+    renderSourceTable(filtered);
+    el.innerHTML = document.getElementById('sourceTable').innerHTML;
+    document.body.removeChild(tmp);
+    renderSourceTable();
+  }
+}
+
+// État de pagination par source
+const paginationState = {};
+
+async function showSourceDetail(id, page=1, search='') {
+  showView('detail');
+  const el = document.getElementById('detailContent');
+
+  // Première fois : afficher le skeleton complet
+  if (page === 1 && !search) {
+    el.innerHTML = `<div style="padding:48px;text-align:center;"><div class="spinner" style="margin:0 auto;width:24px;height:24px;border-width:3px;"></div></div>`;
+  }
+
+  try {
+    const params = new URLSearchParams({ page, page_size: 50, search });
+    const s = await apiFetch(`/sources/${id}?${params}`);
+    const icon = getCategoryIcon(s.connector_type);
+    const pg = s.pagination || {};
+
+    // Mémoriser l'état
+    paginationState[id] = { page, search, total_pages: pg.total_pages || 1 };
+
+    el.innerHTML = `
+      <div class="detail-header">
+        <div class="detail-icon">${icon}</div>
+        <div>
+          <div class="detail-name">${s.name}</div>
+          <div class="detail-type">${s.connector_type} · ${getCategoryBadge(s.category)}</div>
+          <div style="margin-top:8px;">${getStatusBadge(s.status)}</div>
+        </div>
+        <div class="detail-actions">
+          <button class="btn btn-secondary btn-sm" onclick="testSourceById('${id}')">⚡ Tester</button>
+          <button class="btn btn-primary btn-sm" onclick="syncSource('${id}')">↻ Synchroniser</button>
+          <button class="btn btn-ghost btn-sm" onclick="showView('overview')">← Retour</button>
+        </div>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-cell">
+          <div class="info-label">Hôte / URL</div>
+          <div class="info-value" style="font-family:var(--font-mono);font-size:12px;">${s.host||s.base_url||'—'}${s.port?':'+s.port:''}</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-label">Base / Schéma</div>
+          <div class="info-value">${s.database_name||'—'}</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-label">Authentification</div>
+          <div class="info-value">${s.auth_type}</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-label">Entités indexées</div>
+          <div class="info-value" style="color:var(--accent)">${s.entity_count||0}</div>
+        </div>
+      </div>
+
+      <!-- Barre recherche + pagination -->
+      <div style="padding:0 28px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <input type="text" class="form-input" id="entitySearch"
+          placeholder="🔍 Rechercher une table..."
+          style="max-width:280px;"
+          value="${search}"
+          oninput="debounceEntitySearch('${id}', this.value)">
+        <div style="font-family:var(--font-mono);font-size:12px;color:var(--text-2);margin-left:auto;">
+          ${pg.total_entities || 0} entités · Page ${pg.page||1} / ${pg.total_pages||1}
+        </div>
+        <div style="display:flex;gap:4px;">
+          <button class="btn btn-secondary btn-sm" 
+            ${(pg.page||1) <= 1 ? 'disabled' : ''}
+            onclick="showSourceDetail('${id}', ${(pg.page||1)-1}, '${search}')">← Préc</button>
+          <button class="btn btn-secondary btn-sm"
+            ${(pg.page||1) >= (pg.total_pages||1) ? 'disabled' : ''}
+            onclick="showSourceDetail('${id}', ${(pg.page||1)+1}, '${search}')">Suiv →</button>
+        </div>
+      </div>
+
+      <div class="entity-grid" id="entityGrid-${id}">
+        ${s.entities && s.entities.length ? renderEntities(s.entities) :
+          `<div class="empty-state">
+            <div class="empty-icon">📋</div>
+            <div class="empty-title">${search ? 'Aucun résultat pour "'+search+'"' : 'Aucune métadonnée synchronisée'}</div>
+            <div class="empty-desc">${search ? 'Essayez un autre terme' : 'Cliquez sur "Synchroniser" pour détecter les entités'}</div>
+          </div>`}
+      </div>
+
+      <!-- Pagination bas de page -->
+      ${pg.total_pages > 1 ? `
+      <div style="padding:16px 28px 28px;display:flex;justify-content:center;gap:8px;align-items:center;">
+        <button class="btn btn-secondary btn-sm" 
+          ${(pg.page||1) <= 1 ? 'disabled' : ''}
+          onclick="showSourceDetail('${id}', 1, '${search}')">« Premier</button>
+        <button class="btn btn-secondary btn-sm" 
+          ${(pg.page||1) <= 1 ? 'disabled' : ''}
+          onclick="showSourceDetail('${id}', ${(pg.page||1)-1}, '${search}')">← Préc</button>
+        <span style="font-family:var(--font-mono);font-size:12px;color:var(--text-1);padding:0 12px;">
+          Page ${pg.page||1} / ${pg.total_pages||1}
+        </span>
+        <button class="btn btn-secondary btn-sm"
+          ${(pg.page||1) >= (pg.total_pages||1) ? 'disabled' : ''}
+          onclick="showSourceDetail('${id}', ${(pg.page||1)+1}, '${search}')">Suiv →</button>
+        <button class="btn btn-secondary btn-sm"
+          ${(pg.page||1) >= (pg.total_pages||1) ? 'disabled' : ''}
+          onclick="showSourceDetail('${id}', ${pg.total_pages||1}, '${search}')">Dernier »</button>
+      </div>` : ''}`;
+
+  } catch(e) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">${e.message}</div></div>`;
+  }
+}
+
+// Debounce pour la recherche d'entités
+let entitySearchTimer = null;
+function debounceEntitySearch(sourceId, value) {
+  clearTimeout(entitySearchTimer);
+  entitySearchTimer = setTimeout(() => {
+    showSourceDetail(sourceId, 1, value);
+  }, 400);
+}
+
+function renderEntities(entities) {
+  return entities.map(e=>`
+    <div class="entity-card">
+      <div class="entity-header" onclick="toggleEntity(this)">
+        <div class="entity-icon">${e.entity_type==='endpoint'?'🔗':'📋'}</div>
+        <div>
+          <div class="entity-name">${e.name}</div>
+          <div class="entity-meta">${e.field_count||e.fields?.length||0} champs${e.row_count!=null?' · '+e.row_count.toLocaleString()+' lignes':''}</div>
+        </div>
+        <span class="entity-toggle">▶</span>
+      </div>
+      <div class="entity-fields" style="display:none;">
+        <table class="field-table">
+          <thead><tr><th>Champ</th><th>Type</th><th>Type natif</th><th>Clés</th><th>Nullable</th></tr></thead>
+          <tbody>
+          ${(e.fields||[]).map(f=>`
+            <tr>
+              <td class="field-name">${f.name}</td>
+              <td class="field-type">${f.data_type}</td>
+              <td class="field-native">${f.native_type||'—'}</td>
+              <td>
+                ${f.is_primary_key?'<span class="key-badge pk-badge">PK</span>':''}
+                ${f.is_foreign_key?'<span class="key-badge fk-badge">FK</span>':''}
+              </td>
+              <td style="font-family:var(--font-mono);font-size:11px;color:${f.is_nullable?'var(--text-3)':'var(--orange)'}">
+                ${f.is_nullable?'nullable':'NOT NULL'}
+              </td>
+            </tr>
+          `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleEntity(header) {
+  const fields = header.nextElementSibling;
+  const arrow = header.querySelector('.entity-toggle');
+  const open = fields.style.display !== 'none';
+  fields.style.display = open ? 'none' : 'block';
+  arrow.classList.toggle('open', !open);
+}
+
+function openAddModal() {
+  wizardStep = 1; selectedCategory = null; selectedType = null;
+  createdSourceId = null; formData = {}; uploadedFilePath = null;
+  updateWizard();
+  document.getElementById('addOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function closeOnBg(e, id) {
+  if (e.target.classList.contains('overlay')) closeModal(id);
+}
+
+function selectCategory(cat) {
+  selectedCategory = cat; selectedType = null;
+  document.querySelectorAll('.cat-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('cat-'+cat).classList.add('selected');
+  const types = connectorTypes[cat]?.types || [];
+  document.getElementById('typeGridInner').innerHTML = types.map(t=>`
+    <div class="type-pill" onclick="selectType('${t.id}', ${t.default_port||'null'})" id="type-${t.id}">
+      <span class="type-emoji">${t.icon}</span>
+      <span class="type-name">${t.label}</span>
+      ${t.default_port?`<span class="type-port">:${t.default_port}</span>`:''}
+    </div>
+  `).join('');
+  document.getElementById('typeGrid').style.display = 'block';
+  document.getElementById('nextBtn').disabled = true;
+}
+
+function selectType(type, defaultPort) {
+  selectedType = type;
+  formData.defaultPort = defaultPort;
+  document.querySelectorAll('.type-pill').forEach(p=>p.classList.remove('selected'));
+  document.getElementById('type-'+type).classList.add('selected');
+  document.getElementById('nextBtn').disabled = false;
+}
+
+function updateWizard() {
+  for (let i=1;i<=3;i++) {
+    document.getElementById('step'+i).style.display = i===wizardStep?'block':'none';
+    const ws = document.getElementById('ws'+i);
+    ws.className = 'wstep';
+    if (i < wizardStep) ws.classList.add('done');
+    if (i === wizardStep) ws.classList.add('active');
+  }
+  document.getElementById('stepIndicator').textContent = `Étape ${wizardStep} / 3`;
+  document.getElementById('prevBtn').style.display = wizardStep > 1 ? 'inline-flex' : 'none';
+  const nextBtn = document.getElementById('nextBtn');
+  if (wizardStep === 1) {
+    nextBtn.textContent = 'Suivant →'; nextBtn.disabled = !selectedType;
+    nextBtn.onclick = wizardNext;
+  } else if (wizardStep === 2) {
+    nextBtn.textContent = 'Créer la source →'; nextBtn.disabled = false;
+    nextBtn.onclick = submitForm;
+  } else if (wizardStep === 3) {
+    nextBtn.textContent = '✓ Terminer'; nextBtn.disabled = false;
+    nextBtn.onclick = () => { closeModal('addOverlay'); loadSources(); };
+  }
+}
+
+function wizardNext() {
+  if (wizardStep === 1 && selectedType) {
+    wizardStep = 2;
+    buildForm();
+    updateWizard();
+  }
+}
+
+function wizardPrev() {
+  if (wizardStep > 1) { wizardStep--; updateWizard(); }
+}
+
+function buildForm() {
+  const isDB   = ['postgresql','mysql','mssql','sqlite'].includes(selectedType);
+  const isWS   = ['rest','odata','graphql','soap','sap_rfc'].includes(selectedType);
+  const isFile = ['file_csv','file_excel','file_json'].includes(selectedType);
+  const icon   = getCategoryIcon(selectedType);
+  const label  = connectorTypes[selectedCategory]?.types?.find(t=>t.id===selectedType)?.label || selectedType;
+
+  let html = `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:24px;padding:14px 16px;background:var(--bg-2);border-radius:var(--radius);border:1px solid var(--border);">
+      <span style="font-size:22px;">${icon}</span>
+      <div>
+        <div style="font-weight:500">${label}</div>
+        <div style="font-size:11px;color:var(--text-3)">Remplissez les informations de connexion</div>
+      </div>
+    </div>
+    <div class="form-section">
+      <div class="form-section-title">Identification</div>
+      <div class="form-group">
+        <label class="form-label">Nom de la source <span class="required">*</span></label>
+        <input type="text" class="form-input" id="f_name" placeholder="ex: Mon fichier CSV" oninput="formData.name=this.value">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <input type="text" class="form-input" id="f_desc" placeholder="Description optionnelle" oninput="formData.description=this.value">
+      </div>
+    </div>`;
+
+  if (isFile) {
+    html += `
+    <div class="form-section">
+      <div class="form-section-title">Fichier</div>
+      <div class="form-group">
+        <label class="form-label">Uploader un fichier <span class="required">*</span></label>
+        <div class="upload-zone" onclick="document.getElementById('f_file').click()">
+          <input type="file" id="f_file" accept=".csv,.json,.txt,.xlsx" onchange="uploadFileAndStore(this)">
+          <div class="upload-zone-icon">📂</div>
+          <div class="upload-zone-text">Cliquez pour sélectionner un fichier</div>
+          <div class="upload-zone-hint">CSV, JSON, TXT supportés</div>
+        </div>
+        <div id="uploadStatus" class="upload-progress" style="display:none;"></div>
+      </div>
+    </div>`;
+  } else if (isDB) {
+    html += `
+    <div class="form-section">
+      <div class="form-section-title">Connexion</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Hôte <span class="required">*</span></label>
+          <input type="text" class="form-input mono" id="f_host" placeholder="localhost" oninput="formData.host=this.value">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Port</label>
+          <input type="number" class="form-input mono" id="f_port" value="${formData.defaultPort||''}" oninput="formData.port=parseInt(this.value)||null">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Base de données <span class="required">*</span></label>
+          <input type="text" class="form-input mono" id="f_db" placeholder="my_database" oninput="formData.database_name=this.value">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Schéma</label>
+          <input type="text" class="form-input mono" id="f_schema" placeholder="public" oninput="formData.schema_name=this.value">
+        </div>
+      </div>
+    </div>
+    <div class="form-section">
+      <div class="form-section-title">Authentification</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Utilisateur</label>
+          <input type="text" class="form-input" id="f_user" oninput="formData.username=this.value">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Mot de passe</label>
+          <input type="password" class="form-input" id="f_pass" oninput="formData.password=this.value">
+        </div>
+      </div>
+    </div>`;
+  } else if (isWS) {
+    html += `
+    <div class="form-section">
+      <div class="form-section-title">Connexion</div>
+      <div class="form-group">
+        <label class="form-label">URL de base <span class="required">*</span></label>
+        <input type="url" class="form-input mono" id="f_url"
+          placeholder="https://api.example.com${selectedType==='odata'?'/api/data/v9.2':''}"
+          oninput="formData.base_url=this.value">
+        <div class="form-hint">${selectedType==='odata'?'Exemple : https://org.api.crm.dynamics.com/api/data/v9.2':'URL racine de l\'API'}</div>
+      </div>
+    </div>
+    ${selectedType==='rest'?`
+    <div class="form-section">
+      <div class="form-section-title">Endpoints à découvrir</div>
+      <div class="form-group">
+        <label class="form-label">Liste des endpoints</label>
+        <div id="endpointsList">
+          <div class="endpoint-row" style="display:flex;gap:8px;margin-bottom:8px;">
+            <input type="text" class="form-input mono" placeholder="/posts" style="flex:1;" oninput="updateEndpoints()">
+            <input type="text" class="form-input" placeholder="Nom (ex: posts)" style="flex:1;" oninput="updateEndpoints()">
+            <button class="btn btn-danger btn-sm" onclick="removeEndpoint(this)" style="flex-shrink:0;">✕</button>
+          </div>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="addEndpoint()" style="margin-top:8px;">＋ Ajouter un endpoint</button>
+        <div class="form-hint">Chemin relatif + nom de l'entité. Ex: /users → users</div>
+      </div>
+    </div>`:''}
+    <div class="form-section">
+      <div class="form-section-title">Authentification</div>
+      <div class="form-group">
+        <label class="form-label">Type d'auth</label>
+        <select class="form-select" id="f_auth" onchange="updateAuthFields(this.value)">
+          <option value="none">Aucune</option>
+          <option value="basic">Basic (user/password)</option>
+          <option value="bearer">Bearer Token</option>
+          <option value="oauth2">OAuth2 Client Credentials</option>
+          <option value="api_key">API Key</option>
+        </select>
+      </div>
+      <div id="authFields"></div>
+    </div>`;
+  }
+
+  document.getElementById('formContent').innerHTML = html;
+
+  if (isDB && formData.defaultPort) {
+    const portEl = document.getElementById('f_port');
+    if (portEl) { portEl.value = formData.defaultPort; formData.port = formData.defaultPort; }
+  }
+}
+
+async function uploadFileAndStore(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const statusEl = document.getElementById('uploadStatus');
+  statusEl.style.display = 'block';
+  statusEl.innerHTML = `<div class="spinner" style="display:inline-block;margin-right:8px;"></div> Upload en cours...`;
+
+  const fd = new FormData();
+  fd.append('file', file);
+
+  try {
+    const r = await fetch(`${API}/upload`, {method:'POST', body: fd});
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || 'Erreur upload');
+
+    uploadedFilePath = data.uploaded_path;
+    formData.base_url = data.uploaded_path;
+    formData.options = { uploaded_path: data.uploaded_path };
+
+    statusEl.innerHTML = `
+      <div style="color:var(--green);font-weight:500;margin-bottom:6px;">✅ ${data.filename} uploadé avec succès</div>
+      <div style="color:var(--text-2);font-size:11px;">
+        ${data.column_count} colonnes détectées : 
+        <span style="color:var(--accent);font-family:var(--font-mono)">${(data.columns||[]).join(', ')}</span>
+      </div>`;
+  } catch(e) {
+    statusEl.innerHTML = `<div style="color:var(--red);">❌ Erreur: ${e.message}</div>`;
+    uploadedFilePath = null;
+  }
+}
+
+function addEndpoint() {
+  const list = document.getElementById('endpointsList');
+  if (!list) return;
+  const row = document.createElement('div');
+  row.className = 'endpoint-row';
+  row.style.cssText = 'display:flex;gap:8px;margin-bottom:8px;';
+  row.innerHTML = `
+    <input type="text" class="form-input mono" placeholder="/comments" style="flex:1;" oninput="updateEndpoints()">
+    <input type="text" class="form-input" placeholder="Nom (ex: comments)" style="flex:1;" oninput="updateEndpoints()">
+    <button class="btn btn-danger btn-sm" onclick="removeEndpoint(this)" style="flex-shrink:0;">✕</button>`;
+  list.appendChild(row);
+}
+
+function removeEndpoint(btn) {
+  btn.closest('.endpoint-row').remove();
+  updateEndpoints();
+}
+
+function updateEndpoints() {
+  const rows = document.querySelectorAll('.endpoint-row');
+  const endpoints = [];
+  rows.forEach(row => {
+    const inputs = row.querySelectorAll('input');
+    const path = inputs[0]?.value?.trim();
+    const name = inputs[1]?.value?.trim();
+    if (path) {
+      endpoints.push({
+        path,
+        entity_name: name || path.replace('/', '').replace(/\//g, '_') || 'data'
+      });
+    }
+  });
+  formData.options = { ...formData.options, endpoints };
+}
+
+function updateAuthFields(type) {
+  formData.auth_type = type;
+  const el = document.getElementById('authFields');
+  const fields = {
+    none: '',
+    basic: `<div class="form-row">
+      <div class="form-group"><label class="form-label">Utilisateur</label>
+        <input type="text" class="form-input" oninput="formData.username=this.value"></div>
+      <div class="form-group"><label class="form-label">Mot de passe</label>
+        <input type="password" class="form-input" oninput="formData.password=this.value"></div>
+    </div>`,
+    bearer: `<div class="form-group"><label class="form-label">Token</label>
+      <input type="text" class="form-input mono" placeholder="eyJ..." oninput="formData.token=this.value"></div>`,
+    oauth2: `<div class="form-group"><label class="form-label">Token URL</label>
+      <input type="url" class="form-input mono" oninput="formData.token_url=this.value"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Client ID</label>
+          <input type="text" class="form-input mono" oninput="formData.client_id=this.value"></div>
+        <div class="form-group"><label class="form-label">Client Secret</label>
+          <input type="password" class="form-input" oninput="formData.client_secret=this.value"></div>
+      </div>`,
+    api_key: `<div class="form-row">
+      <div class="form-group"><label class="form-label">Header</label>
+        <input type="text" class="form-input" value="X-API-Key" oninput="formData.api_key_header=this.value"></div>
+      <div class="form-group"><label class="form-label">Valeur</label>
+        <input type="password" class="form-input" oninput="formData.api_key_value=this.value"></div>
+    </div>`,
+  };
+  el.innerHTML = fields[type] || '';
+}
+
+async function submitForm() {
+  const name = document.getElementById('f_name')?.value?.trim();
+  if (!name) { toast('Le nom est requis', 'error'); return; }
+
+  const isFile = ['file_csv','file_excel','file_json'].includes(selectedType);
+  if (isFile && !uploadedFilePath) {
+    toast('Veuillez uploader un fichier', 'error'); return;
+  }
+
+  const payload = {
+    name,
+    connector_type: selectedType,
+    description:    formData.description || null,
+    host:           document.getElementById('f_host')?.value?.trim() || null,
+    port:           formData.port || null,
+    database_name:  document.getElementById('f_db')?.value?.trim() || null,
+    schema_name:    document.getElementById('f_schema')?.value?.trim() || null,
+    base_url:       uploadedFilePath || document.getElementById('f_url')?.value?.trim() || null,
+    auth_type:      formData.auth_type || 'none',
+    username:       formData.username || document.getElementById('f_user')?.value?.trim() || null,
+    password:       formData.password || document.getElementById('f_pass')?.value || null,
+    token:          formData.token || null,
+    token_url:      formData.token_url || null,
+    client_id:      formData.client_id || null,
+    client_secret:  formData.client_secret || null,
+    scope:          formData.scope || null,
+    api_key_header: formData.api_key_header || null,
+    api_key_value:  formData.api_key_value || null,
+    options:        formData.options || {},
+  };
+
+  const btn = document.getElementById('nextBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Création...';
+
+  try {
+    const src = await apiFetch('/sources', {method:'POST', body:JSON.stringify(payload)});
+    createdSourceId = src.id;
+    toast(`Source "${src.name}" créée`, 'success');
+    wizardStep = 3;
+    updateWizard();
+    setTimeout(() => autoTest(src.id), 500);
+  } catch(e) {
+    toast(e.message, 'error');
+    btn.disabled = false;
+    btn.textContent = 'Créer la source →';
+  }
+}
+
+async function autoTest(id) {
+  document.getElementById('testIcon').textContent = '⏳';
+  document.getElementById('testMsg').textContent = 'Test de connexion en cours...';
+  document.getElementById('testSub').textContent = '';
+  try {
+    const r = await apiFetch(`/sources/${id}/test`, {method:'POST'});
+    document.getElementById('testResultBox').style.display = 'block';
+    document.getElementById('testIcon').textContent = r.success ? '✅' : '❌';
+    document.getElementById('testMsg').textContent = r.success ? 'Connexion établie !' : 'Connexion échouée';
+    document.getElementById('testSub').textContent = r.message;
+    const statusEl = document.getElementById('testStatusLabel');
+    statusEl.textContent = r.success ? `✓ OK — ${r.latency_ms}ms` : `✗ ERREUR`;
+    statusEl.className = `test-status ${r.success?'ts-ok':'ts-err'}`;
+    const latColor = r.latency_ms < 100 ? 'latency-good' : r.latency_ms < 500 ? 'latency-ok' : 'latency-slow';
+    const latPct = Math.min(100, Math.round(r.latency_ms / 20));
+    document.getElementById('testResultBody').innerHTML = `
+      <div class="test-row">
+        <span class="test-row-label">Statut</span>
+        <span class="test-row-value" style="color:${r.success?'var(--green)':'var(--red)'}">
+          ${r.success ? '✓ Succès' : '✗ Échec'}
+        </span>
+      </div>
+      <div class="test-row">
+        <span class="test-row-label">Message</span>
+        <span class="test-row-value">${r.message}</span>
+      </div>
+      ${r.success?`<div class="test-row">
+        <span class="test-row-label">Latence</span>
+        <span class="test-row-value">${r.latency_ms}ms</span>
+        <div class="latency-bar"><div class="latency-fill ${latColor}" style="width:${latPct}%"></div></div>
+      </div>`:''}`;
+    if (r.success) setTimeout(() => autoSync(id), 800);
+  } catch(e) {
+    document.getElementById('testIcon').textContent = '⚠️';
+    document.getElementById('testMsg').textContent = 'Erreur lors du test';
+    document.getElementById('testSub').textContent = e.message;
+  }
+}
+
+async function autoSync(id) {
+  document.getElementById('testSub').textContent = 'Synchronisation des métadonnées...';
+  try {
+    const r = await apiFetch(`/sources/${id}/sync`, {method:'POST'});
+    if (r.success) {
+      document.getElementById('entityPreview').style.display = 'block';
+      document.getElementById('entityPreviewList').innerHTML = `
+        <div style="display:flex;gap:12px;">
+          <div style="text-align:center;flex:1;padding:14px;background:var(--bg-2);border-radius:var(--radius);border:1px solid var(--border);">
+            <div style="font-family:var(--font-mono);font-size:24px;font-weight:600;color:var(--accent)">${r.entity_count}</div>
+            <div style="font-size:12px;color:var(--text-2)">Entités</div>
+          </div>
+          <div style="text-align:center;flex:1;padding:14px;background:var(--bg-2);border-radius:var(--radius);border:1px solid var(--border);">
+            <div style="font-family:var(--font-mono);font-size:24px;font-weight:600;color:var(--green)">${r.field_count}</div>
+            <div style="font-size:12px;color:var(--text-2)">Champs</div>
+          </div>
+          <div style="text-align:center;flex:1;padding:14px;background:var(--bg-2);border-radius:var(--radius);border:1px solid var(--border);">
+            <div style="font-family:var(--font-mono);font-size:24px;font-weight:600;color:var(--text-1)">${r.duration_ms}ms</div>
+            <div style="font-size:12px;color:var(--text-2)">Durée sync</div>
+          </div>
+        </div>`;
+      document.getElementById('testSub').textContent = r.message;
+    }
+  } catch(e) {
+    console.warn('Sync error:', e.message);
+  }
+}
+
+async function testSourceById(id) {
+  toast('Test en cours...', 'info');
+  try {
+    const r = await apiFetch(`/sources/${id}/test`, {method:'POST'});
+    toast(r.success ? `✓ ${r.latency_ms}ms — ${r.message}` : `✗ ${r.message}`, r.success?'success':'error');
+    await loadSources();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function syncSource(id) {
+  toast('Synchronisation...', 'info');
+  try {
+    const r = await apiFetch(`/sources/${id}/sync`, {method:'POST'});
+    toast(r.success ? `✓ ${r.message}` : `✗ ${r.message}`, r.success?'success':'error');
+    await loadSources();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function deleteSource(id) {
+  const src = allSources.find(s=>s.id===id);
+  if (!confirm(`Supprimer "${src?.name}" ?`)) return;
+  try {
+    await apiFetch(`/sources/${id}`, {method:'DELETE'});
+    toast('Source supprimée', 'success');
+    await loadSources();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function refreshAll() {
+  await checkApiHealth();
+  await loadSources();
+  toast('Actualisé', 'info');
+}
+
+function toggleTheme() {
+  const html = document.documentElement;
+  const isLight = html.classList.toggle('light');
+  localStorage.setItem('op_theme', isLight ? 'light' : 'dark');
+  document.getElementById('themeIcon').textContent = isLight ? '☀️' : '🌙';
+  document.getElementById('themeLabel').textContent = isLight ? 'Light' : 'Dark';
+}
+
+function applyStoredTheme() {
+  const stored = localStorage.getItem('op_theme');
+  if (stored === 'light') {
+    document.documentElement.classList.add('light');
+    document.getElementById('themeIcon').textContent = '☀️';
+    document.getElementById('themeLabel').textContent = 'Light';
+  }
+}
+
+async function init() {
+  applyStoredTheme();
+  await checkApiHealth();
+  await loadConnectorTypes();
+  await loadSources();
+  setInterval(checkApiHealth, 30000);
+}
+
+init();
+</script>
+</body>
+</html>
