@@ -110,6 +110,7 @@ async def _test_webservice_connection(source, secrets: Dict) -> Dict:
         url = source.base_url
         if source.connector_type.value == "odata":
             url = f"{url}/$metadata"
+            headers["Accept"] = "application/xml, text/xml, */*"
 
         start = time.time()
         resp = requests.get(url, headers=headers, timeout=10)
@@ -156,10 +157,8 @@ def _resolve_file_path(source) -> str:
 
     if opts.get("file_path"):
         path = opts["file_path"]
-        # Chemin Windows local : C:\... ou C:/... -> /mnt/host/...
         if len(path) > 2 and path[1] == ":":
             path = "/mnt/host/" + path[3:].replace("\\", "/")
-        # Chemin reseau UNC : \\serveur\... -> /mnt/network/serveur/...
         elif path.startswith("\\\\"):
             path = "/mnt/network/" + path[2:].replace("\\", "/")
         elif path.startswith("//"):
@@ -276,7 +275,9 @@ async def _fetch_db_metadata(source, secrets: Dict) -> List[Dict]:
 
 async def _fetch_webservice_metadata(source, secrets: Dict) -> List[Dict]:
     import requests
-    headers: Dict[str, str] = {"Accept": "application/json"}
+
+    # Headers de base sans Accept pour OData
+    headers: Dict[str, str] = {}
 
     if source.auth_type.value == "bearer":
         headers["Authorization"] = f"Bearer {secrets.get('token','')}"
@@ -286,10 +287,15 @@ async def _fetch_webservice_metadata(source, secrets: Dict) -> List[Dict]:
             f"{source.username}:{secrets.get('password','')}".encode()
         ).decode()
         headers["Authorization"] = f"Basic {creds}"
+    elif source.auth_type.value == "api_key":
+        header_name = source.options.get("api_key_header", "X-API-Key")
+        headers[header_name] = secrets.get("api_key_value", "")
 
     if source.connector_type.value == "odata":
         return await _parse_odata_metadata(source.base_url, headers)
 
+    # REST / GraphQL / SOAP
+    headers["Accept"] = "application/json"
     endpoints = source.options.get("endpoints", [{"path": "/", "entity_name": "root"}])
     entities = []
 
@@ -427,32 +433,73 @@ def _infer_type(value) -> str:
         return "date"
     return "string"
 
-
 async def _parse_odata_metadata(base_url: str, headers: Dict) -> List[Dict]:
-    import requests, xml.etree.ElementTree as ET
-    resp = requests.get(f"{base_url}/$metadata", headers=headers, timeout=15)
+    import requests
+    import xml.etree.ElementTree as ET
+
+    meta_headers = {k: v for k, v in headers.items() if k != "Accept"}
+    meta_headers["Accept"] = "application/xml, text/xml, */*"
+
+    resp = requests.get(f"{base_url}/$metadata", headers=meta_headers, timeout=15)
     resp.raise_for_status()
+
     root = ET.fromstring(resp.text)
+
     EDM_MAP = {
         "Edm.String": "string", "Edm.Int32": "integer", "Edm.Int64": "integer",
-        "Edm.Decimal": "decimal", "Edm.Double": "float", "Edm.Boolean": "boolean",
+        "Edm.Int16": "integer", "Edm.Byte": "integer",
+        "Edm.Decimal": "decimal", "Edm.Double": "float", "Edm.Single": "float",
+        "Edm.Boolean": "boolean",
         "Edm.DateTime": "datetime", "Edm.DateTimeOffset": "datetime",
-        "Edm.Date": "date", "Edm.Guid": "uuid",
+        "Edm.Date": "date", "Edm.Time": "string",
+        "Edm.Guid": "uuid", "Edm.Binary": "string",
     }
+
+    # Namespace EDM (pas EDMX !)
+    EDM_NS = "http://docs.oasis-open.org/odata/ns/edm"
+    ns = f"{{{EDM_NS}}}"
+
     entities = []
-    for elem in root.iter():
-        if not (elem.tag.endswith("}EntityType") or elem.tag == "EntityType"):
-            continue
+
+    for elem in root.iter(f"{ns}EntityType"):
         name = elem.get("Name", "Unknown")
         fields = []
-        for child in elem:
-            tag = child.tag.split("}")[-1] if "}" in child.tag else child.tag
-            if tag == "Property":
-                fields.append({
-                    "name": child.get("Name", ""),
-                    "type": EDM_MAP.get(child.get("Type", "Edm.String"), "string"),
-                    "native_type": child.get("Type"),
-                    "nullable": child.get("Nullable", "true").lower() == "true",
-                })
-        entities.append({"name": name, "entity_type": "odata_entity", "fields": fields})
+
+        pk_set = set()
+        key_elem = elem.find(f"{ns}Key")
+        if key_elem is not None:
+            for pr in key_elem.findall(f"{ns}PropertyRef"):
+                pk_set.add(pr.get("Name", ""))
+
+        for prop in elem.findall(f"{ns}Property"):
+            prop_name = prop.get("Name", "")
+            prop_type = prop.get("Type", "Edm.String")
+            fields.append({
+                "name":        prop_name,
+                "type":        EDM_MAP.get(prop_type, "string"),
+                "native_type": prop_type,
+                "nullable":    prop.get("Nullable", "true").lower() != "false",
+                "primary_key": prop_name in pk_set,
+                "foreign_key": False,
+            })
+
+        for nav in elem.findall(f"{ns}NavigationProperty"):
+            nav_name = nav.get("Name", "")
+            fields.append({
+                "name":        nav_name,
+                "type":        "relation",
+                "native_type": nav.get("Type", ""),
+                "nullable":    True,
+                "primary_key": False,
+                "foreign_key": True,
+            })
+
+        if fields:
+            entities.append({
+                "name":        name,
+                "entity_type": "odata_entity",
+                "fields":      fields
+            })
+
+    logger.info(f"[OData] {len(entities)} entites parsees depuis {base_url}")
     return entities
