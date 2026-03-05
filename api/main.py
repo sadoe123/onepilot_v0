@@ -120,18 +120,23 @@ async def get_connector_types():
                 {"id": "mysql",      "label": "MySQL",       "icon": "🐬", "default_port": 3306},
                 {"id": "mssql",      "label": "SQL Server",  "icon": "🪟", "default_port": 1433},
                 {"id": "sqlite",     "label": "SQLite",      "icon": "📁", "default_port": None},
+                {"id": "sage_100",   "label": "SAGE 100",    "icon": "🟢", "default_port": 1433},
             ]
         },
         "webservice": {
-            "label": "Web Service / API",
-            "description": "Connexion via protocole HTTP",
+            "label": "Web Service / ERP",
+            "description": "Connexion via protocole HTTP ou ERP",
             "icon": "globe",
             "types": [
-                {"id": "rest",    "label": "REST API",         "icon": "🔗", "default_port": None},
-                {"id": "odata",   "label": "OData (Dynamics)", "icon": "⚡", "default_port": None},
-                {"id": "graphql", "label": "GraphQL",          "icon": "◈",  "default_port": None},
-                {"id": "soap",    "label": "SOAP / WSDL",      "icon": "📮", "default_port": None},
-                {"id": "sap_rfc", "label": "SAP RFC/BAPI",     "icon": "🔷", "default_port": 3300},
+                {"id": "rest",        "label": "REST API",           "icon": "🔗", "default_port": None},
+                {"id": "odata",       "label": "OData",              "icon": "⚡", "default_port": None},
+                {"id": "graphql",     "label": "GraphQL",            "icon": "◈",  "default_port": None},
+                {"id": "soap",        "label": "SOAP / WSDL",        "icon": "📮", "default_port": None},
+                {"id": "sap_rfc",     "label": "SAP RFC/BAPI",       "icon": "🔷", "default_port": 3300},
+                {"id": "sap_odata",   "label": "SAP OData (S/4HANA)","icon": "🔶", "default_port": 443},
+                {"id": "dynamics365", "label": "Dynamics 365",       "icon": "🟦", "default_port": None},
+                {"id": "sage_x3",     "label": "SAGE X3",            "icon": "🟩", "default_port": None},
+                {"id": "sage_cloud",  "label": "SAGE Business Cloud","icon": "☁️", "default_port": None},
             ]
         },
         "file": {

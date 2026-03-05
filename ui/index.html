@@ -804,7 +804,10 @@ async function apiFetch(path, opts={}) {
 function getCategoryIcon(type) {
   const icons = {
     postgresql:'🐘', mysql:'🐬', mssql:'🪟', sqlite:'📁',
-    rest:'🔗', odata:'⚡', graphql:'◈', soap:'📮', sap_rfc:'🔷',
+    rest:'🔗', odata:'⚡', graphql:'◈', soap:'📮',
+    sap_rfc:'🔷', sap_odata:'🔶',
+    dynamics365:'🟦',
+    sage_x3:'🟩', sage_100:'🟢', sage_cloud:'☁️',
     file_csv:'📄', file_excel:'📊', file_json:'📋'
   };
   return icons[type] || '🔌';
@@ -863,20 +866,27 @@ async function loadConnectorTypes() {
   } catch(e) {
     connectorTypes = {
       database: { label:'Base de données', types:[
-        {id:'postgresql',label:'PostgreSQL',icon:'🐘',default_port:5432},
-        {id:'mysql',label:'MySQL',icon:'🐬',default_port:3306},
-        {id:'mssql',label:'SQL Server',icon:'🪟',default_port:1433},
-        {id:'sqlite',label:'SQLite',icon:'📁',default_port:null},
+        {id:'postgresql',  label:'PostgreSQL',   icon:'🐘', default_port:5432},
+        {id:'mysql',       label:'MySQL',         icon:'🐬', default_port:3306},
+        {id:'mssql',       label:'SQL Server',    icon:'🪟', default_port:1433},
+        {id:'sqlite',      label:'SQLite',        icon:'📁', default_port:null},
+        {id:'sage_100',    label:'SAGE 100',       icon:'🟢', default_port:1433},
       ]},
-      webservice: { label:'Web Service', types:[
-        {id:'rest',label:'REST API',icon:'🔗',default_port:null},
-        {id:'odata',label:'OData',icon:'⚡',default_port:null},
-        {id:'sap_rfc',label:'SAP RFC',icon:'🔷',default_port:3300},
+      webservice: { label:'Web Service / ERP', types:[
+        {id:'rest',        label:'REST API',       icon:'🔗', default_port:null},
+        {id:'odata',       label:'OData',          icon:'⚡', default_port:null},
+        {id:'graphql',     label:'GraphQL',        icon:'◈',  default_port:null},
+        {id:'soap',        label:'SOAP / WSDL',    icon:'📮', default_port:null},
+        {id:'sap_rfc',     label:'SAP RFC/BAPI',   icon:'🔷', default_port:3300},
+        {id:'sap_odata',   label:'SAP OData (S/4)',icon:'🔶', default_port:443},
+        {id:'dynamics365', label:'Dynamics 365',   icon:'🟦', default_port:null},
+        {id:'sage_x3',     label:'SAGE X3',        icon:'🟩', default_port:null},
+        {id:'sage_cloud',  label:'SAGE Cloud',     icon:'☁️', default_port:null},
       ]},
       file: { label:'Fichiers', types:[
-        {id:'file_csv',label:'CSV',icon:'📄',default_port:null},
-        {id:'file_excel',label:'Excel',icon:'📊',default_port:null},
-        {id:'file_json',label:'JSON',icon:'📋',default_port:null},
+        {id:'file_csv',    label:'CSV',            icon:'📄', default_port:null},
+        {id:'file_excel',  label:'Excel',          icon:'📊', default_port:null},
+        {id:'file_json',   label:'JSON',           icon:'📋', default_port:null},
       ]}
     };
   }
@@ -1222,8 +1232,8 @@ function wizardPrev() {
 }
 
 function buildForm() {
-  const isDB   = ['postgresql','mysql','mssql','sqlite'].includes(selectedType);
-  const isWS   = ['rest','odata','graphql','soap','sap_rfc'].includes(selectedType);
+  const isDB   = ['postgresql','mysql','mssql','sqlite','sage_100'].includes(selectedType);
+  const isWS   = ['rest','odata','graphql','soap','sap_rfc','sap_odata','dynamics365','sage_x3','sage_cloud'].includes(selectedType);
   const isFile = ['file_csv','file_excel','file_json'].includes(selectedType);
   const icon   = getCategoryIcon(selectedType);
   const label  = connectorTypes[selectedCategory]?.types?.find(t=>t.id===selectedType)?.label || selectedType;
@@ -1327,6 +1337,72 @@ function buildForm() {
         </div>
         <button class="btn btn-secondary btn-sm" onclick="addEndpoint()" style="margin-top:8px;">＋ Ajouter un endpoint</button>
         <div class="form-hint">Chemin relatif + nom de l'entité. Ex: /users → users</div>
+      </div>
+    </div>`:''}
+    ${selectedType==='sap_odata'?`
+    <div class="form-section">
+      <div class="form-section-title">SAP OData / S/4HANA</div>
+      <div class="form-group">
+        <label class="form-label">Client SAP</label>
+        <input type="text" class="form-input mono" placeholder="100" oninput="formData.options={...formData.options||{},sap_client:this.value}">
+        <div class="form-hint">Numéro de mandant SAP (ex: 100, 200, 800)</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Service OData</label>
+        <input type="text" class="form-input mono" placeholder="API_BUSINESS_PARTNER" oninput="formData.options={...formData.options||{},service_name:this.value}">
+        <div class="form-hint">Ex: API_BUSINESS_PARTNER, API_SALES_ORDER_SRV</div>
+      </div>
+    </div>`:''}
+    ${selectedType==='sap_rfc'?`
+    <div class="form-section">
+      <div class="form-section-title">SAP RFC / BAPI</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">System ID (SID)</label>
+          <input type="text" class="form-input mono" placeholder="PRD" oninput="formData.options={...formData.options||{},sid:this.value}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Client SAP</label>
+          <input type="text" class="form-input mono" placeholder="800" oninput="formData.options={...formData.options||{},client:this.value}">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Numéro de système</label>
+        <input type="text" class="form-input mono" placeholder="00" oninput="formData.options={...formData.options||{},sysnr:this.value}">
+        <div class="form-hint">Numéro d'instance SAP (généralement 00)</div>
+      </div>
+    </div>`:''}
+    ${selectedType==='dynamics365'?`
+    <div class="form-section">
+      <div class="form-section-title">Microsoft Dynamics 365 / Azure AD</div>
+      <div class="form-group">
+        <label class="form-label">Tenant ID <span class="required">*</span></label>
+        <input type="text" class="form-input mono" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" oninput="formData.options={...formData.options||{},tenant_id:this.value}">
+        <div class="form-hint">Trouvé dans Azure Portal → Azure Active Directory</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Token URL</label>
+        <input type="text" class="form-input mono" placeholder="https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token" oninput="formData.token_url=this.value">
+      </div>
+    </div>`:''}
+    ${selectedType==='sage_x3'?`
+    <div class="form-section">
+      <div class="form-section-title">SAGE X3 Web Services</div>
+      <div class="form-group">
+        <label class="form-label">Dossier SAGE X3 <span class="required">*</span></label>
+        <input type="text" class="form-input mono" placeholder="SEED" oninput="formData.options={...formData.options||{},folder:this.value}">
+        <div class="form-hint">Nom du dossier X3 (ex: SEED, LIVE, TEST)</div>
+      </div>
+    </div>`:''}
+    ${selectedType==='sage_cloud'?`
+    <div class="form-section">
+      <div class="form-section-title">SAGE Business Cloud</div>
+      <div class="form-group">
+        <label class="form-label">Version API</label>
+        <select class="form-select" onchange="formData.options={...formData.options||{},api_version:this.value}">
+          <option value="v3.1">v3.1 (Accounting)</option>
+          <option value="v3">v3</option>
+        </select>
       </div>
     </div>`:''}
     <div class="form-section">
